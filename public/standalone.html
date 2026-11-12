@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GameClub - Protect Caola</title>
+  <!-- Matter.js Physics Engine -->
+  <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    body {
+      background-color: #e2e8f0;
+      color: #0f172a;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 8px 6px;
+    }
+    .game-container {
+      width: 100%;
+      max-width: 430px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .neo-box {
+      background: #ffffff;
+      border: 2px solid #000000;
+      box-shadow: 3px 3px 0px #000000;
+      border-radius: 12px;
+    }
+    .neo-btn {
+      background: #ffffff;
+      border: 2px solid #000000;
+      box-shadow: 2px 2px 0px #000000;
+      font-weight: 800;
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+    .neo-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px #000000;
+    }
+    .neo-btn-volt {
+      background: #ccff00;
+      color: #000000;
+      border: 2px solid #000000;
+      box-shadow: 3px 3px 0px #000000;
+      font-weight: 900;
+    }
+    .header {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo-badge {
+      background: #ccff00;
+      border: 2px solid #000;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      background: #f1f5f9;
+      border: 2px solid #000;
+      border-radius: 8px;
+      padding: 3px;
+    }
+    .nav-tab {
+      flex: 1;
+      padding: 4px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .nav-tab.active {
+      background: #ccff00;
+      border: 1px solid #000;
+    }
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 400 / 680;
+      border: 3px solid #000000;
+      border-radius: 14px;
+      background: #58c7f3;
+      box-shadow: 4px 4px 0px #000000;
+      overflow: hidden;
+      touch-action: none;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+    .alert-banner {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      background: #f43f5e;
+      color: #ffffff;
+      border: 2px solid #000;
+      box-shadow: 3px 3px 0px #000;
+      padding: 8px;
+      border-radius: 8px;
+      font-weight: 900;
+      font-size: 11px;
+      text-align: center;
+      display: none;
+      z-index: 30;
+    }
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 50;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-card {
+      background: #ffffff;
+      border: 3px solid #000000;
+      box-shadow: 4px 4px 0px #000000;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 320px;
+      padding: 18px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="game-container">
+  <!-- Header -->
+  <div class="neo-box header">
+    <div class="header-top">
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span class="logo-badge">GC</span>
+        <div>
+          <div style="font-weight:900; font-size:13px;">GAMECLUB</div>
+          <div style="font-size:10px; color:#64748b; font-weight:700;">PROTECT CAOLA · VIBE VIBERS</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <button id="dexBtn" class="neo-btn" style="background:#fef08a;">1,420 $caola</button>
+        <button id="sfxBtn" class="neo-btn">SFX: ON</button>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <div class="nav-tab active" id="tabPlay">PLAY</div>
+      <div class="nav-tab" id="tabLocker">LOCKER</div>
+      <div class="nav-tab" id="tabDex">NVDA DEX</div>
+    </div>
+  </div>
+
+  <!-- Fair Play Banner -->
+  <div class="neo-box" style="padding:6px 10px; background:#fefce8; display:flex; justify-content:space-between; align-items:center;">
+    <div style="font-size:10px; font-weight:800;">
+      <span style="background:#ccff00; padding:1px 4px; border:1px solid #000; border-radius:4px; margin-right:4px;">ANTI-CHEAT</span>
+      Cocoons banned! Hook shield to golden pins!
+    </div>
+    <button id="lvlBtn" class="neo-btn" style="padding:2px 6px; font-size:9px;">LVL 1/8</button>
+  </div>
+
+  <!-- In-Game HUD -->
+  <div class="neo-box" style="padding:8px 12px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+    <div style="flex:1;">
+      <div style="display:flex; justify-content:space-between; font-size:10px; font-weight:800; margin-bottom:2px;">
+        <span>INK (GAS):</span><span id="inkVal">100%</span>
+      </div>
+      <div style="height:10px; background:#e2e8f0; border:2px solid #000; border-radius:10px; overflow:hidden;">
+        <div id="inkFill" style="height:100%; background:#22c55e; width:100%; transition:width 0.05s;"></div>
+      </div>
+    </div>
+    <div style="background:#ccff00; border:2px solid #000; padding:4px 10px; border-radius:8px; text-align:center;">
+      <div style="font-size:8px; font-weight:900;">SURVIVE</div>
+      <div id="timeVal" style="font-size:14px; font-weight:900;">8s</div>
+    </div>
+    <button id="retryBtn" class="neo-btn" style="padding:6px 10px;">RETRY</button>
+  </div>
+
+  <!-- Canvas -->
+  <div class="canvas-wrap">
+    <canvas id="gameCanvas" width="400" height="680"></canvas>
+    <div id="alertBanner" class="alert-banner">⚠️ ILLEGAL COCOON! ANCHOR SHIELD TO PINS!</div>
+
+    <!-- Win Modal -->
+    <div id="winModal" class="modal-overlay">
+      <div class="modal-card">
+        <div style="font-size:36px;">🏆</div>
+        <div style="font-weight:900; font-size:16px;">STAGE CLEARED!</div>
+        <div style="font-size:11px; font-weight:700; color:#475569;">Proof-of-Shield Verified! Caola is safe!</div>
+        <div style="background:#f0fdf4; border:2px solid #000; border-radius:10px; padding:8px; font-size:12px; font-weight:900; color:#166534;">
+          +50 $caola · +1.0 NVDA Shard
+        </div>
+        <button id="nextLevelBtn" class="neo-btn neo-btn-volt" style="padding:10px; font-size:12px;">NEXT LEVEL ▶</button>
+        <button id="replayBtn" class="neo-btn">REPLAY</button>
+      </div>
+    </div>
+
+    <!-- Fail Modal -->
+    <div id="failModal" class="modal-overlay">
+      <div class="modal-card">
+        <div style="font-size:36px;">💥</div>
+        <div style="font-weight:900; font-size:16px; color:#e11d48;">STAGE FAILED!</div>
+        <div style="font-size:11px; font-weight:700; color:#475569;">Bees breached your shield or hero fell!</div>
+        <div style="background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; padding:6px; font-size:10px; font-weight:700;">
+          💡 TIP: Hook an umbrella arch over the golden pins!
+        </div>
+        <button id="tryAgainBtn" class="neo-btn neo-btn-volt" style="padding:10px; font-size:12px;">TRY AGAIN ↺</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- Audio Synthesizer ---
+class Sound {
+  constructor() { this.ctx = null; this.enabled = true; }
+  init() {
+    if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+  }
+  click() {
+    if (!this.enabled) return;
+    this.init();
+    const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+    osc.type = 'square'; osc.frequency.setValueAtTime(650, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.04);
+    g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.04);
+    osc.connect(g); g.connect(this.ctx.destination);
+    osc.start(); osc.stop(this.ctx.currentTime + 0.05);
+  }
+  win() {
+    if (!this.enabled) return;
+    this.init();
+    [261, 329, 392, 523, 659].forEach((f, i) => {
+      const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(f, this.ctx.currentTime + i * 0.08);
+      g.gain.setValueAtTime(0.12, this.ctx.currentTime + i * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.08 + 0.15);
+      osc.connect(g); g.connect(this.ctx.destination);
+      osc.start(this.ctx.currentTime + i * 0.08);
+      osc.stop(this.ctx.currentTime + i * 0.08 + 0.18);
+    });
+  }
+  fail() {
+    if (!this.enabled) return;
+    this.init();
+    const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(80, this.ctx.currentTime + 0.3);
+    g.gain.setValueAtTime(0.2, this.ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+    osc.connect(g); g.connect(this.ctx.destination);
+    osc.start(); osc.stop(this.ctx.currentTime + 0.4);
+  }
+}
+const sfx = new Sound();
+
+// Levels
+const LEVELS = [
+  { id:1, maxInk:650, time:8, char:{x:200,y:440}, hives:[{x:200,y:70,cnt:14}], pins:[{x:130,y:320},{x:270,y:320}], plats:[{x:200,y:520,w:90,h:140,col:'#38b000'},{x:60,y:640,w:120,h:40},{x:340,y:640,w:120,h:40}], spikes:[{x:200,y:650,w:160,h:30}] },
+  { id:2, maxInk:680, time:8, char:{x:160,y:420}, hives:[{x:280,y:75,cnt:16}], pins:[{x:80,y:340}], plats:[{x:170,y:520,w:220,h:40,ang:0.35}], spikes:[{x:320,y:640,w:160,h:40}] },
+  { id:3, maxInk:720, time:9, char:{x:200,y:460}, hives:[{x:70,y:80,cnt:10},{x:330,y:80,cnt:10}], pins:[{x:95,y:280},{x:305,y:280}], plats:[{x:40,y:380,w:90,h:180},{x:360,y:380,w:90,h:180},{x:200,y:550,w:120,h:40}], spikes:[{x:120,y:650,w:80,h:30},{x:280,y:650,w:80,h:30}] },
+  { id:4, maxInk:700, time:8, char:{x:200,y:370}, hives:[{x:200,y:70,cnt:18}], pins:[{x:140,y:240},{x:260,y:240}], plats:[{x:200,y:440,w:80,h:35},{x:200,y:210,w:60,h:22}], spikes:[{x:200,y:645,w:380,h:40}] },
+  { id:5, maxInk:750, time:9, char:{x:110,y:480}, hives:[{x:320,y:70,cnt:20}], pins:[{x:60,y:360},{x:180,y:360}], plats:[{x:110,y:550,w:160,h:44},{x:280,y:300,w:180,h:24,ang:0.45}], spikes:[{x:290,y:640,w:180,h:40}] },
+  { id:6, maxInk:780, time:9, char:{x:130,y:410}, hives:[{x:90,y:75,cnt:11},{x:310,y:120,cnt:12}], pins:[{x:45,y:310},{x:210,y:340}], plats:[{x:100,y:510,w:200,h:170},{x:340,y:400,w:80,h:25}], spikes:[{x:290,y:640,w:190,h:40}] },
+  { id:7, maxInk:820, time:10, char:{x:200,y:460}, hives:[{x:60,y:80,cnt:8},{x:200,y:65,cnt:10},{x:340,y:80,cnt:8}], pins:[{x:100,y:240},{x:200,y:230},{x:300,y:240}], plats:[{x:200,y:550,w:260,h:48},{x:100,y:280,w:70,h:20},{x:300,y:280,w:70,h:20}], spikes:[{x:60,y:650,w:100,h:30},{x:340,y:650,w:100,h:30}] },
+  { id:8, maxInk:850, time:10, char:{x:200,y:400}, hives:[{x:90,y:60,cnt:15},{x:310,y:60,cnt:15}], pins:[{x:70,y:310},{x:200,y:250},{x:330,y:310}], plats:[{x:200,y:470,w:90,h:40},{x:70,y:350,w:60,h:20},{x:330,y:350,w:60,h:20}], spikes:[{x:200,y:645,w:380,h:40}] }
+];
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const inkFill = document.getElementById('inkFill');
+const inkVal = document.getElementById('inkVal');
+const timeVal = document.getElementById('timeVal');
+const lvlBtn = document.getElementById('lvlBtn');
+const alertBanner = document.getElementById('alertBanner');
+const winModal = document.getElementById('winModal');
+const failModal = document.getElementById('failModal');
+
+let currentLvl = 0;
+let gameState = 'READY';
+let engine, runner, charBody, lineBody = null, beeBodies = [];
+let isDrawing = false, pts = [], usedInk = 0, timerSec = 8, timerId = null;
+
+// Load Cutout Meme Caola
+const caolaImg = new Image();
+caolaImg.src = '/caola.png';
+
+function isPointInPoly(px, py, poly) {
+  if (poly.length < 3) return false;
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i].x, yi = poly[i].y, xj = poly[j].x, yj = poly[j].y;
+    const intersect = ((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function initLevel(idx) {
+  if (timerId) clearInterval(timerId);
+  winModal.classList.remove('active');
+  failModal.classList.remove('active');
+  alertBanner.style.display = 'none';
+
+  currentLvl = idx;
+  const lvl = LEVELS[currentLvl];
+  lvlBtn.textContent = `LVL ${lvl.id}/${LEVELS.length}`;
+  gameState = 'READY';
+  isDrawing = false;
+  pts = [];
+  usedInk = 0;
+  timerSec = lvl.time;
+  timeVal.textContent = timerSec + 's';
+  inkFill.style.width = '100%';
+  inkVal.textContent = '100%';
+  lineBody = null;
+  beeBodies = [];
+
+  if (engine) {
+    Matter.World.clear(engine.world, false);
+    Matter.Engine.clear(engine);
+  }
+
+  engine = Matter.Engine.create({ enableSleeping: false, positionIterations: 14, velocityIterations: 14 });
+  engine.gravity.y = 1.15;
+
+  // Boundaries
+  Matter.World.add(engine.world, [
+    Matter.Bodies.rectangle(-15, 340, 30, 680, { isStatic: true }),
+    Matter.Bodies.rectangle(415, 340, 30, 680, { isStatic: true }),
+    Matter.Bodies.rectangle(200, -20, 400, 40, { isStatic: true })
+  ]);
+
+  // Platforms
+  lvl.plats.forEach(p => {
+    Matter.World.add(engine.world, Matter.Bodies.rectangle(p.x, p.y, p.w, p.h, { isStatic: true, angle: p.ang || 0, friction: 0.88 }));
+  });
+
+  // Anchor Pins
+  if (lvl.pins) {
+    lvl.pins.forEach(pin => {
+      Matter.World.add(engine.world, Matter.Bodies.circle(pin.x, pin.y, 11, { isStatic: true, friction: 0.95 }));
+    });
+  }
+
+  // Character (Radius 36 for large, crisp, high-visibility meme head)
+  const CHAR_RADIUS = 36;
+  const BEE_RADIUS = 10;
+  charBody = Matter.Bodies.circle(lvl.char.x, lvl.char.y, CHAR_RADIUS, { friction: 0.88, density: 0.005 });
+  Matter.World.add(engine.world, charBody);
+
+  // Bulletproof collision detection: Matter.js physical contact events
+  function checkCollision(evt) {
+    if (gameState !== 'COUNTDOWN' || !charBody) return;
+    for (let i = 0; i < evt.pairs.length; i++) {
+      const pair = evt.pairs[i];
+      if (
+        (pair.bodyA === charBody && beeBodies.includes(pair.bodyB)) ||
+        (pair.bodyB === charBody && beeBodies.includes(pair.bodyA))
+      ) {
+        endGame(false);
+        return;
+      }
+    }
+  }
+  Matter.Events.on(engine, 'collisionStart', checkCollision);
+  Matter.Events.on(engine, 'collisionActive', checkCollision);
+
+  Matter.Events.on(engine, 'beforeUpdate', () => {
+    if (gameState !== 'COUNTDOWN' || !charBody) return;
+    const cPos = charBody.position;
+
+    if (cPos.y > 670) { endGame(false); return; }
+
+    if (lvl.spikes) {
+      for (const sp of lvl.spikes) {
+        if (Math.abs(cPos.x - sp.x) < sp.w/2 + CHAR_RADIUS * 0.7 && Math.abs(cPos.y - sp.y) < sp.h/2 + CHAR_RADIUS * 0.7) {
+          endGame(false);
+          return;
+        }
+      }
+    }
+
+    const now = performance.now() * 0.005;
+    const contactThreshold = CHAR_RADIUS + BEE_RADIUS + 4; // 50px contact buffer
+    beeBodies.forEach((b, i) => {
+      const dx = cPos.x - b.position.x, dy = cPos.y - b.position.y;
+      const d = Math.hypot(dx, dy);
+      // Immediate fail if within contact threshold
+      if (d <= contactThreshold) { endGame(false); return; }
+      if (d > 5) {
+        const nx = dx/d, ny = dy/d, wobble = Math.sin(now * 3 + i * 1.5) * 0.0003;
+        Matter.Body.applyForce(b, b.position, { x: nx * 0.00055 - ny * wobble, y: ny * 0.00055 + nx * wobble });
+        const spd = Math.hypot(b.velocity.x, b.velocity.y);
+        if (spd > 5.4) Matter.Body.setVelocity(b, { x: (b.velocity.x/spd)*5.4, y: (b.velocity.y/spd)*5.4 });
+      }
+    });
+  });
+
+  if (!runner) {
+    runner = Matter.Runner.create();
+    Matter.Runner.run(runner, engine);
+  }
+}
+
+function endGame(success) {
+  if (gameState !== 'COUNTDOWN') return;
+  if (timerId) clearInterval(timerId);
+  if (success) {
+    gameState = 'SUCCESS';
+    sfx.win();
+    winModal.classList.add('active');
+  } else {
+    gameState = 'FAIL';
+    sfx.fail();
+    failModal.classList.add('active');
+  }
+}
+
+function isPointInObstacle(px, py) {
+  if (charBody && Math.hypot(px - charBody.position.x, py - charBody.position.y) <= 28) return true;
+  const lvl = LEVELS[currentLvl];
+  for (const p of lvl.plats) {
+    let dx = px - p.x, dy = py - p.y;
+    if (p.ang) {
+      const cos = Math.cos(-p.ang), sin = Math.sin(-p.ang);
+      const rx = dx * cos - dy * sin, ry = dx * sin + dy * cos;
+      dx = rx; dy = ry;
+    }
+    if (Math.abs(dx) <= p.w/2 + 2 && Math.abs(dy) <= p.h/2 + 2) return true;
+  }
+  return (px < 4 || px > 396 || py < 4 || py > 676);
+}
+
+function segmentHitsObstacle(p1, p2) {
+  const d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+  const steps = Math.max(3, Math.ceil(d / 4));
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    if (isPointInObstacle(p1.x + (p2.x - p1.x)*t, p1.y + (p2.y - p1.y)*t)) return true;
+  }
+  return false;
+}
+
+function finishDrawing() {
+  if (!isDrawing || pts.length < 2) { isDrawing = false; pts = []; return; }
+  isDrawing = false;
+
+  const parts = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p1 = pts[i], p2 = pts[i+1], dx = p2.x - p1.x, dy = p2.y - p1.y, len = Math.hypot(dx, dy);
+    if (len < 1) continue;
+    parts.push(Matter.Bodies.rectangle((p1.x+p2.x)/2, (p1.y+p2.y)/2, len, 14, { angle: Math.atan2(dy, dx), chamfer: { radius: 3 } }));
+    parts.push(Matter.Bodies.circle(p1.x, p1.y, 7));
+  }
+  parts.push(Matter.Bodies.circle(pts[pts.length - 1].x, pts[pts.length - 1].y, 7));
+
+  if (parts.length > 0) {
+    lineBody = Matter.Body.create({ parts, friction: 0.9, density: 0.005 });
+    Matter.World.add(engine.world, lineBody);
+  }
+
+  gameState = 'COUNTDOWN';
+  const lvl = LEVELS[currentLvl];
+  lvl.hives.forEach(h => {
+    for (let i = 0; i < h.cnt; i++) {
+      const b = Matter.Bodies.circle(h.x + (Math.random()-0.5)*20, h.y + 15, 9, { frictionAir: 0.04, density: 0.001 });
+      Matter.Body.setVelocity(b, { x: (Math.random()-0.5)*3, y: 2 + Math.random()*2 });
+      Matter.World.add(engine.world, b);
+      beeBodies.push(b);
+    }
+  });
+
+  timerSec = lvl.time;
+  timeVal.textContent = timerSec + 's';
+  timerId = setInterval(() => {
+    timerSec--;
+    timeVal.textContent = timerSec + 's';
+    if (timerSec <= 0) {
+      clearInterval(timerId);
+      endGame(true);
+    }
+  }, 1000);
+}
+
+function getXY(e) {
+  const r = canvas.getBoundingClientRect();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    x: Math.max(5, Math.min(395, (cx - r.left) * (400 / r.width))),
+    y: Math.max(5, Math.min(675, (cy - r.top) * (680 / r.height)))
+  };
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+  if (gameState !== 'READY') return;
+  canvas.setPointerCapture(e.pointerId);
+  const p = getXY(e);
+  if (isPointInObstacle(p.x, p.y)) return;
+  isDrawing = true;
+  pts = [p];
+  usedInk = 0;
+  sfx.click();
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (!isDrawing || gameState !== 'READY') return;
+  const p = getXY(e);
+  const last = pts[pts.length - 1];
+  if (isPointInObstacle(p.x, p.y) || segmentHitsObstacle(last, p)) return;
+  const d = Math.hypot(p.x - last.x, p.y - last.y);
+  if (d >= 8) {
+    const maxInk = LEVELS[currentLvl].maxInk;
+    if (usedInk + d >= maxInk) {
+      if (!isPointInObstacle(p.x, p.y)) pts.push(p);
+      usedInk = maxInk;
+      finishDrawing();
+      return;
+    }
+    usedInk += d;
+    pts.push(p);
+    const rem = Math.max(0, 1 - usedInk / maxInk);
+    inkFill.style.width = (rem * 100) + '%';
+    inkVal.textContent = Math.round(rem * 100) + '%';
+  }
+});
+
+canvas.addEventListener('pointerup', finishDrawing);
+canvas.addEventListener('pointercancel', finishDrawing);
+
+document.getElementById('retryBtn').addEventListener('click', () => { sfx.click(); initLevel(currentLvl); });
+document.getElementById('tryAgainBtn').addEventListener('click', () => { sfx.click(); initLevel(currentLvl); });
+document.getElementById('replayBtn').addEventListener('click', () => { sfx.click(); initLevel(currentLvl); });
+document.getElementById('nextLevelBtn').addEventListener('click', () => {
+  sfx.click();
+  initLevel((currentLvl + 1) % LEVELS.length);
+});
+
+// Canvas Render
+function render() {
+  ctx.save();
+  const time = performance.now() * 0.001;
+
+  // Sky Gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, 680);
+  grad.addColorStop(0, '#58c7f3');
+  grad.addColorStop(1, '#ade8f4');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 400, 680);
+
+  // Voxel Hills
+  ctx.fillStyle = '#48b83e';
+  ctx.beginPath();
+  ctx.moveTo(0,480); ctx.lineTo(90,430); ctx.lineTo(180,470); ctx.lineTo(270,420); ctx.lineTo(400,450); ctx.lineTo(400,680); ctx.lineTo(0,680);
+  ctx.fill();
+
+  const lvl = LEVELS[currentLvl];
+
+  // Spikes
+  if (lvl.spikes) {
+    lvl.spikes.forEach(sp => {
+      const cnt = Math.floor(sp.w / 14);
+      const w = sp.w / cnt;
+      ctx.fillStyle = '#e11d48';
+      ctx.beginPath();
+      for (let i = 0; i < cnt; i++) {
+        const sx = sp.x - sp.w/2 + i*w;
+        ctx.moveTo(sx, sp.y + sp.h/2);
+        ctx.lineTo(sx + w/2, sp.y - sp.h/2);
+        ctx.lineTo(sx + w, sp.y + sp.h/2);
+      }
+      ctx.fill();
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
+    });
+  }
+
+  // Platforms
+  lvl.plats.forEach(p => {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    if (p.ang) ctx.rotate(p.ang);
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+    ctx.fillStyle = '#22c55e';
+    ctx.fillRect(-p.w/2, -p.h/2, p.w, 10);
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2.5;
+    ctx.strokeRect(-p.w/2, -p.h/2, p.w, p.h);
+    ctx.restore();
+  });
+
+  // Anchor Pins
+  if (lvl.pins) {
+    lvl.pins.forEach(pin => {
+      ctx.save();
+      ctx.translate(pin.x, pin.y);
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#ccff00';
+      ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  // Hives
+  lvl.hives.forEach((h, idx) => {
+    ctx.save();
+    ctx.translate(h.x, h.y);
+    ctx.rotate(Math.sin(time*3 + idx)*0.05);
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(-18, -12, 36, 24);
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+    ctx.strokeRect(-18, -12, 36, 24);
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath(); ctx.arc(0, 4, 6, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  });
+
+  // Stroke
+  if (isDrawing && pts.length > 1) {
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 18; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.stroke();
+    ctx.strokeStyle = '#4338ca'; ctx.lineWidth = 14; ctx.stroke();
+  }
+
+  // Physical Line
+  if (lineBody) {
+    ctx.fillStyle = '#1e1b4b'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2.5;
+    lineBody.parts.slice(1).forEach(part => {
+      ctx.beginPath();
+      const v = part.vertices;
+      ctx.moveTo(v[0].x, v[0].y);
+      for (let i = 1; i < v.length; i++) ctx.lineTo(v[i].x, v[i].y);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    });
+  }
+
+  // Hero Caola
+  if (charBody) {
+    ctx.save();
+    ctx.translate(charBody.position.x, charBody.position.y);
+    ctx.rotate(charBody.angle);
+    if (caolaImg.complete) {
+      ctx.drawImage(caolaImg, -28, -28, 56, 56);
+    } else {
+      ctx.fillStyle = '#94a3b8';
+      ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Bees
+  beeBodies.forEach(b => {
+    ctx.save();
+    ctx.translate(b.position.x, b.position.y);
+    ctx.rotate(Math.atan2(b.velocity.y, b.velocity.x));
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.moveTo(10, 0); ctx.lineTo(2, -6); ctx.lineTo(-7, -4);
+    ctx.lineTo(-11, 0); ctx.lineTo(-7, 4); ctx.lineTo(2, 6);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.restore();
+  });
+
+  ctx.restore();
+  requestAnimationFrame(render);
+}
+
+initLevel(0);
+requestAnimationFrame(render);
+</script>
+</body>
+</html>

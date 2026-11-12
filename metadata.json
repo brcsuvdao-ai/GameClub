@@ -1,0 +1,6 @@
+{
+  "name": "GameClub - Protect Caola",
+  "description": "Retro PS1 low-poly physics puzzle game. Draw protective shelters with real-time Matter.js physics to save Caola and crew from swarms of angry bees.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
